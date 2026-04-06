@@ -4,14 +4,14 @@ import wave
 from pathlib import Path
 
 _VENV_SITE = Path.home() / ".openclaw_support" / "venv" / "lib" / "python3.13" / "site-packages"
-_MODELS_DIR = Path.home() / ".openclaw_support" / "models" / "tts"
+MODELS_DIR = Path.home() / ".openclaw_support" / "models" / "tts"
 
 # Startup readiness guard — fail cleanly so launchd ThrottleInterval backs off.
 if not _VENV_SITE.exists():
     print(f"[tts] ERROR: venv site-packages not found at {_VENV_SITE}. Run setup.sh.", flush=True)
     sys.exit(1)
-if not any(_MODELS_DIR.glob("*.onnx")):
-    print(f"[tts] ERROR: no voice models found in {_MODELS_DIR}. Run setup.sh.", flush=True)
+if not any(MODELS_DIR.glob("*.onnx")):
+    print(f"[tts] ERROR: no voice models found in {MODELS_DIR}. Run setup.sh.", flush=True)
     sys.exit(1)
 
 if str(_VENV_SITE) not in sys.path:
@@ -19,13 +19,11 @@ if str(_VENV_SITE) not in sys.path:
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import Response
 from piper.voice import PiperVoice
 from pydantic import BaseModel
 
 app = FastAPI()
-
-MODELS_DIR = _MODELS_DIR
 
 # Map OpenAI built-in voice names to piper models.
 # Custom names (e.g. "en_US-lessac-medium") pass through directly.
