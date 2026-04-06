@@ -5,3 +5,7 @@ run_com.openclaw.*.sh
 __pycache__/
 *.pyc
 .DS_Store
+.claude/
+.memsearch/
+to_code_reviewer.md
+to_code_writer.md
