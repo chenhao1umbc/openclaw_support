@@ -13,15 +13,21 @@ LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
 
 mkdir -p "$DEPLOY_DIR" "$MODELS_DIR" "$LOGS_DIR"
 
+# ── uv ────────────────────────────────────────────────────────────────────────
+if ! command -v uv &>/dev/null; then
+    echo "[setup] Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
 # ── Virtual environment ───────────────────────────────────────────────────────
 if [ ! -d "$VENV" ]; then
-    echo "[setup] Creating Python 3.12 venv at $VENV ..."
-    python3.12 -m venv "$VENV"
+    echo "[setup] Creating Python 3.13 venv at $VENV ..."
+    uv venv "$VENV" --python 3.13
 fi
 
 echo "[setup] Installing Python dependencies..."
-"$VENV/bin/pip" install --quiet --upgrade pip
-"$VENV/bin/pip" install --quiet -r "$SCRIPT_DIR/requirements.txt"
+UV_PROJECT_ENVIRONMENT="$VENV" uv sync --project "$SCRIPT_DIR" --quiet
 
 # ── Deploy server scripts ─────────────────────────────────────────────────────
 # Scripts are kept in the project dir for editing, deployed here for launchd.
@@ -62,8 +68,8 @@ echo "[setup] Pre-fetching Whisper medium model (downloads on first call if miss
 "$VENV/bin/python" -c "import mlx_whisper; mlx_whisper.transcribe('/dev/null', path_or_hf_repo='mlx-community/whisper-medium-mlx')" 2>/dev/null || true
 
 # ── launchd plists ────────────────────────────────────────────────────────────
-PYTHON_BIN="$(readlink -f "${VENV}/bin/python3.12")"
-SITE_PACKAGES="${VENV}/lib/python3.12/site-packages"
+PYTHON_BIN="$(readlink -f "${VENV}/bin/python3.13")"
+SITE_PACKAGES="${VENV}/lib/python3.13/site-packages"
 
 write_plist() {
     local label="$1"
@@ -120,5 +126,5 @@ echo "  Whisper STT : http://100.65.129.114:5001/v1/audio/transcriptions"
 echo "  TTS         : http://100.65.129.114:5002/v1/audio/speech"
 echo ""
 echo "Configure OpenClaw on Linux (100.102.43.44) with:"
-echo "  OPENAI_WHISPER_BASE_URL=http://100.65.129.114:5001"
-echo "  OPENAI_TTS_BASE_URL=http://100.65.129.114:5002"
+echo "  OPENAI_WHISPER_BASE_URL=http://100.65.129.114:5001/v1"
+echo "  OPENAI_TTS_BASE_URL=http://100.65.129.114:5002/v1"
