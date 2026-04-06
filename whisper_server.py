@@ -4,8 +4,13 @@ import tempfile
 from pathlib import Path
 from typing import Optional
 
-# Ensure venv site-packages are on path when launched by launchd.
 _VENV_SITE = Path.home() / ".openclaw_support" / "venv" / "lib" / "python3.13" / "site-packages"
+
+# Startup readiness guard — fail cleanly so launchd ThrottleInterval backs off.
+if not _VENV_SITE.exists():
+    print(f"[whisper] ERROR: venv site-packages not found at {_VENV_SITE}. Run setup.sh.", flush=True)
+    sys.exit(1)
+
 if str(_VENV_SITE) not in sys.path:
     sys.path.insert(0, str(_VENV_SITE))
 
@@ -17,6 +22,11 @@ from fastapi.responses import JSONResponse
 app = FastAPI()
 
 MODEL = os.environ.get("WHISPER_MODEL", "mlx-community/whisper-medium-mlx")
+
+
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
 
 
 @app.post("/v1/audio/transcriptions")

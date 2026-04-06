@@ -11,3 +11,4 @@
 - [ ] 3. setup.sh: replace pip+venv with uv venv + uv pip install; update Python paths to 3.13; remove requirements.txt reference
 - [ ] 4. cleanup: delete requirements.txt; commit and push
 - [ ] 5. robustness: add startup readiness guard + health endpoint to both servers; add ThrottleInterval to launchd plists to prevent rapid crash-restart loops
+- [ ] 6. performance: cache whisper model at startup in whisper_server.py — mlx_whisper reloads model weights on every transcribe() call causing slow responses

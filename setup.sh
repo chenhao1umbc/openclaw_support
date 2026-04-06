@@ -103,6 +103,8 @@ write_plist() {
     <true/>
     <key>KeepAlive</key>
     <true/>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
     <key>StandardOutPath</key>
     <string>${LOGS_DIR}/${label}.log</string>
     <key>StandardErrorPath</key>

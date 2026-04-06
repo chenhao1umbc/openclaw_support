@@ -1,23 +1,31 @@
 import io
-import os
 import sys
 import wave
 from pathlib import Path
 
-# Ensure venv site-packages are on path when launched by launchd.
 _VENV_SITE = Path.home() / ".openclaw_support" / "venv" / "lib" / "python3.13" / "site-packages"
+_MODELS_DIR = Path.home() / ".openclaw_support" / "models" / "tts"
+
+# Startup readiness guard — fail cleanly so launchd ThrottleInterval backs off.
+if not _VENV_SITE.exists():
+    print(f"[tts] ERROR: venv site-packages not found at {_VENV_SITE}. Run setup.sh.", flush=True)
+    sys.exit(1)
+if not any(_MODELS_DIR.glob("*.onnx")):
+    print(f"[tts] ERROR: no voice models found in {_MODELS_DIR}. Run setup.sh.", flush=True)
+    sys.exit(1)
+
 if str(_VENV_SITE) not in sys.path:
     sys.path.insert(0, str(_VENV_SITE))
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from piper.voice import PiperVoice
 from pydantic import BaseModel
 
 app = FastAPI()
 
-MODELS_DIR = Path(__file__).parent / "models" / "tts"
+MODELS_DIR = _MODELS_DIR
 
 # Map OpenAI built-in voice names to piper models.
 # Custom names (e.g. "en_US-lessac-medium") pass through directly.
@@ -53,8 +61,13 @@ class TTSRequest(BaseModel):
     response_format: str = "wav"
 
 
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
+
+
 @app.post("/v1/audio/speech")
-async def synthesize(req: TTSRequest):
+async def synthesize(req: TTSRequest) -> Response:
     voice = load_voice(req.voice)
     buf = io.BytesIO()
     with wave.open(buf, "wb") as wav_file:
