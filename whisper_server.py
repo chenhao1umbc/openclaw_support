@@ -1,6 +1,7 @@
 import os
 import sys
 import tempfile
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
@@ -14,14 +15,26 @@ if not _VENV_SITE.exists():
 if str(_VENV_SITE) not in sys.path:
     sys.path.insert(0, str(_VENV_SITE))
 
+import mlx.core as mx
 import mlx_whisper
 import uvicorn
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import JSONResponse
-
-app = FastAPI()
+from mlx_whisper.transcribe import ModelHolder
 
 MODEL = os.environ.get("WHISPER_MODEL", "mlx-community/whisper-medium-mlx")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Pre-load model weights into cache so first request has no cold-start delay.
+    print(f"[whisper] Loading model {MODEL} ...", flush=True)
+    ModelHolder.get_model(MODEL, mx.float16)
+    print("[whisper] Model ready.", flush=True)
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/health")
