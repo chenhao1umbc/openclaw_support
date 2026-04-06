@@ -1,0 +1,7 @@
+.venv/
+models/
+logs/
+run_com.openclaw.*.sh
+__pycache__/
+*.pyc
+.DS_Store
