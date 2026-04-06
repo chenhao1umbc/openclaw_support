@@ -39,6 +39,8 @@ async def transcribe(
             kwargs["language"] = language
         if prompt:
             kwargs["initial_prompt"] = prompt
+        if temperature:
+            kwargs["temperature"] = temperature
         result = mlx_whisper.transcribe(tmp_path, **kwargs)
         text = result["text"].strip()
     finally:

@@ -10,6 +10,7 @@ VENV="$DEPLOY_DIR/venv"
 MODELS_DIR="$DEPLOY_DIR/models/tts"
 LOGS_DIR="$DEPLOY_DIR/logs"
 LAUNCH_AGENTS="$HOME/Library/LaunchAgents"
+MAC_IP="$(ipconfig getifaddr en0 2>/dev/null || /Applications/Tailscale.app/Contents/MacOS/Tailscale ip 2>/dev/null | head -1)"
 
 mkdir -p "$DEPLOY_DIR" "$MODELS_DIR" "$LOGS_DIR"
 
@@ -68,7 +69,7 @@ echo "[setup] Pre-fetching Whisper medium model (downloads on first call if miss
 "$VENV/bin/python" -c "import mlx_whisper; mlx_whisper.transcribe('/dev/null', path_or_hf_repo='mlx-community/whisper-medium-mlx')" 2>/dev/null || true
 
 # ── launchd plists ────────────────────────────────────────────────────────────
-PYTHON_BIN="$(readlink -f "${VENV}/bin/python3.13")"
+PYTHON_BIN="$("$VENV/bin/python3.13" -c "import os,sys; print(os.path.realpath(sys.executable))")"
 SITE_PACKAGES="${VENV}/lib/python3.13/site-packages"
 
 write_plist() {
@@ -122,9 +123,9 @@ write_plist "com.openclaw.tts"     "$DEPLOY_DIR/tts_server.py"     "5002"
 echo ""
 echo "[setup] Done."
 echo ""
-echo "  Whisper STT : http://100.65.129.114:5001/v1/audio/transcriptions"
-echo "  TTS         : http://100.65.129.114:5002/v1/audio/speech"
+echo "  Whisper STT : http://${MAC_IP}:5001/v1/audio/transcriptions"
+echo "  TTS         : http://${MAC_IP}:5002/v1/audio/speech"
 echo ""
-echo "Configure OpenClaw on Linux (100.102.43.44) with:"
-echo "  OPENAI_WHISPER_BASE_URL=http://100.65.129.114:5001/v1"
-echo "  OPENAI_TTS_BASE_URL=http://100.65.129.114:5002/v1"
+echo "Configure OpenClaw on Linux with:"
+echo "  OPENAI_WHISPER_BASE_URL=http://${MAC_IP}:5001/v1"
+echo "  OPENAI_TTS_BASE_URL=http://${MAC_IP}:5002/v1"

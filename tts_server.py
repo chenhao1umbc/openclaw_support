@@ -3,7 +3,6 @@ import os
 import sys
 import wave
 from pathlib import Path
-from typing import Optional
 
 # Ensure venv site-packages are on path when launched by launchd.
 _VENV_SITE = Path.home() / ".openclaw_support" / "venv" / "lib" / "python3.13" / "site-packages"
@@ -52,7 +51,6 @@ class TTSRequest(BaseModel):
     input: str
     voice: str = "alloy"
     response_format: str = "wav"
-    speed: Optional[float] = 1.0
 
 
 @app.post("/v1/audio/speech")
